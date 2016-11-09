@@ -4,8 +4,8 @@ import (
 	"context"
 
 	api "github.com/hooklift/apis/go/identity"
-	"github.com/hooklift/lift/openidc/grpc"
-	"github.com/hooklift/lift/openidc/tokens"
+	"github.com/lift-plugins/auth/openidc/grpc"
+	"github.com/lift-plugins/auth/openidc/tokens"
 )
 
 // SignOut removes locally stored tokens and does best effort to revoke tokens from

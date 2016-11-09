@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/hooklift/lift/openidc/tokens"
+	"github.com/lift-plugins/auth/openidc/tokens"
 )
 
 // WhoAmI returns the email of the current logged user.
