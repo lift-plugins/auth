@@ -10,7 +10,7 @@ import (
 	docopt "github.com/docopt/docopt-go"
 	"github.com/howeyc/gopass"
 
-	"github.com/hooklift/lift/auth"
+	"github.com/lift-plugins/auth"
 )
 
 // Version is defined in compilation time.
