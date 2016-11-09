@@ -1,3 +1,4 @@
 build
 cmd/auth/auth
 auth
+dist
