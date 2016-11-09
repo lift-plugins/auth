@@ -4,13 +4,13 @@ LDFLAGS 	:= -ldflags "-X main.Version=$(VERSION) -X main.Name=$(NAME)"
 test:
 	go test ./...
 
-build:
-	go build -o $(NAME) $(LDFLAGS) cmd/$(NAME)/$(NAME).go
+dev:
+	go build -tags dev -o $(NAME) $(LDFLAGS) cmd/$(NAME)/$(NAME).go
 
 install:
 	go install $(LDFLAGS) cmd/$(NAME).go
 
-compile:
+build:
 	@rm -rf build/
 	@gox $(LDFLAGS) \
 	-osarch="darwin/amd64 darwin/386" \
@@ -21,7 +21,7 @@ compile:
 	-output "build/$(NAME)_$(VERSION)_{{.OS}}_{{.Arch}}/$(NAME)" \
 	./...
 
-dist: compile
+dist: build
 	$(eval FILES := $(shell ls build))
 	@rm -rf dist && mkdir dist
 	@for f in $(FILES); do \
