@@ -35,8 +35,8 @@ Commands:
 
 Options:
   -p, --provider=ADDRESS:PORT              The identity provider address. [default: id.hooklift.io:443]
-  -h, --help                               Show this screen.
-  --version                                Show version.
+  -h, --help                               Shows this screen.
+  --version                                Shows version of this plugin.
 `
 
 // DEBUG determines whether or not DEBUG is active.
@@ -57,12 +57,12 @@ func main() {
 		log.Fatalf("%+v", err)
 	}
 
-	if args["login"].(bool) || args["signin"].(bool) {
+	if args["login"].(bool) {
 		signIn(args)
 		return
 	}
 
-	if args["logout"].(bool) || args["signout"].(bool) {
+	if args["logout"].(bool) {
 		signOut(args)
 	}
 
