@@ -7,6 +7,7 @@ import (
 
 	api "github.com/hooklift/apis/go/identity"
 	"github.com/hooklift/lift"
+	"github.com/lift-plugins/auth/openidc/clients"
 	"github.com/lift-plugins/auth/openidc/discovery"
 	"github.com/lift-plugins/auth/openidc/grpc"
 	"github.com/lift-plugins/auth/openidc/tokens"
@@ -29,23 +30,23 @@ func SignIn(email, password, address string) error {
 	req := &api.SignInRequest{
 		Username:     email,
 		Password:     string(password),
-		Scope:        "openid name email offline_access",
+		Scope:        "openid name email offline_access global",
 		ResponseType: "token id_token",
 		ClientId:     lift.ClientID,
 		State:        csrfToken,
 		Nonce:        nonce,
 	}
 
-	serverConn, err := grpc.Connection(address, "lift-auth")
+	grpcConn, err := grpc.Connection(address, "lift-auth")
 	if err != nil {
 		return errors.Wrap(err, "failed connecting to openid provider")
 	}
-	defer serverConn.Close()
+	defer grpcConn.Close()
 
-	client := api.NewAuthzClient(serverConn)
+	authzClient := api.NewAuthzClient(grpcConn)
 	ctx := context.Background()
 
-	resp, err := client.SignIn(ctx, req)
+	resp, err := authzClient.SignIn(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "failed signing user in")
 	}
@@ -72,7 +73,14 @@ func SignIn(email, password, address string) error {
 		return errors.Wrap(err, "failed validating tokens received from provider")
 	}
 
-	return tokens.Write()
+	if err := tokens.Write(); err != nil {
+		return err
+	}
+
+	// We register a Lift OAuth2 client per user for the following reasons:
+	// To no leak or share client credentials among users
+	// To avoid a rogue Lift CLI client causing damages to other users.
+	return clients.Register(ctx, grpcConn)
 }
 
 // randomValue returns a cryptographically random value.
