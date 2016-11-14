@@ -16,6 +16,7 @@ import (
 
 	"github.com/hooklift/lift"
 	"github.com/hooklift/lift/config"
+	"github.com/lift-plugins/auth/openidc/clients"
 	"github.com/lift-plugins/auth/openidc/discovery"
 	"github.com/lift-plugins/auth/openidc/oauth2"
 	"github.com/pkg/errors"
@@ -145,7 +146,12 @@ func (tks *Tokens) RefreshIfExpired() error {
 		return errors.Wrapf(err, "failed preparing HTTP request")
 	}
 
-	req.SetBasicAuth(lift.ClientID, lift.ClientSecret)
+	clientApp := new(clients.Client)
+	if err := clientApp.Read(); err != nil {
+		return err
+	}
+
+	req.SetBasicAuth(clientApp.ClientId, clientApp.ClientSecret)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := oauth2.Client.Do(req)
