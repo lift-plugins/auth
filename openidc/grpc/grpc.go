@@ -32,7 +32,7 @@ func Connection(address, userAgent string) (*grpc.ClientConn, error) {
 	// Since we want to let RPC calls, to public endpoints, go through just fine. Instead,
 	// We allow the server to complain back if an endpoint requiring authentication is attempting
 	// to be accessed without an access token.
-	creds, err := rpcCredentials(address)
+	creds, err := rpcCredentials()
 	if err == nil {
 		clientOpts = append(clientOpts, grpc.WithPerRPCCredentials(creds))
 	}
