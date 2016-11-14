@@ -23,7 +23,9 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-var tokensPath = filepath.Join(config.WorkDir, "tokens.json")
+var (
+	tokensPath = filepath.Join(config.WorkDir, "tokens.json")
+)
 
 // Tokens represents the tokens retrieved from the OpenID provider server.
 type Tokens struct {

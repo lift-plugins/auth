@@ -106,7 +106,7 @@ Password:
 	if err := auth.SignIn(email, string(password[:]), address); err != nil {
 		s.Stop()
 		fmt.Print("\r")
-		log.Fatalf("%+v", err)
+		log.Fatalln(err)
 	}
 
 	fmt.Println("\rSigned in successfully.")

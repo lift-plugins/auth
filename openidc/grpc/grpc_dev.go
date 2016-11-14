@@ -4,7 +4,6 @@ package grpc
 
 import (
 	"crypto/x509"
-	"fmt"
 	"log"
 	"net/url"
 	"strings"
@@ -39,8 +38,6 @@ o9FuJqdUS5o9Rgii55nFhNdzQvT/p/ANGHBCfQyUNtAjPp92KvXC
 `
 
 func Connection(address, userAgent string) (*grpc.ClientConn, error) {
-	fmt.Println("\ndevmode: using self-signed certificate")
-
 	// go-grpc fails if address has a scheme
 	if strings.HasPrefix(address, "http") {
 		u, err := url.Parse(address)

@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"log"
 
 	api "github.com/hooklift/apis/go/identity"
 	"github.com/lift-plugins/auth/openidc/grpc"
@@ -12,11 +11,7 @@ import (
 // SignOut removes locally stored tokens and does best effort to revoke tokens from
 // the OpenID Provider.
 func SignOut(address string) error {
-	defer func() {
-		if err := tokens.Delete(); err != nil {
-			log.Printf("%+v", err)
-		}
-	}()
+	defer tokens.Delete()
 
 	serverConn, err := grpc.Connection(address, "lift-auth")
 	if err != nil {

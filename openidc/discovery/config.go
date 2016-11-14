@@ -26,7 +26,11 @@ type ProviderConfig struct {
 	TokenEndpoint            string   `json:"token_endpoint"`
 	UserInfoEndpoint         string   `json:"userinfo_endpoint"`
 	RevocationEndpoint       string   `json:"revocation_endpoint"`
+	RegistrationEndpoint     string   `json:"registration_endpoint"`
 	JWKSURI                  string   `json:"jwks_uri"`
+	PolicyURI                string   `json:"op_policy_uri"`
+	TOSURI                   string   `json:"op_tos_uri"`
+	ServiceDoc               string   `json:"service_documentation"`
 	ResponseTypes            []string `json:"response_types_supported"`
 	SubjectTypes             []string `json:"subject_types_supported"`
 	IDTokenSigAlgs           []string `json:"id_token_signing_alg_values_supported"`

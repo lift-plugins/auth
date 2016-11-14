@@ -5,11 +5,14 @@ import (
 	"crypto/rand"
 	"fmt"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+
 	api "github.com/hooklift/apis/go/identity"
 	"github.com/hooklift/lift"
 	"github.com/lift-plugins/auth/openidc/clients"
 	"github.com/lift-plugins/auth/openidc/discovery"
-	"github.com/lift-plugins/auth/openidc/grpc"
+	apigrpc "github.com/lift-plugins/auth/openidc/grpc"
 	"github.com/lift-plugins/auth/openidc/tokens"
 
 	"github.com/pkg/errors"
@@ -37,9 +40,9 @@ func SignIn(email, password, address string) error {
 		Nonce:        nonce,
 	}
 
-	grpcConn, err := grpc.Connection(address, "lift-auth")
+	grpcConn, err := apigrpc.Connection(address, "lift-auth")
 	if err != nil {
-		return errors.Wrap(err, "failed connecting to openid provider")
+		return errors.Wrap(err, "failed connecting to openid provider.")
 	}
 	defer grpcConn.Close()
 
@@ -48,6 +51,10 @@ func SignIn(email, password, address string) error {
 
 	resp, err := authzClient.SignIn(ctx, req)
 	if err != nil {
+		gcode := grpc.Code(err)
+		if gcode == codes.Unauthenticated || gcode == codes.NotFound {
+			return errors.New("Email or password is not valid.")
+		}
 		return errors.Wrap(err, "failed signing user in")
 	}
 
