@@ -1,7 +1,7 @@
 {
     "name": "auth",
     "version": "v1.1.0",
-    "description": "Allows to sign in and out from Hooklift platform, manages authentication and access tokens. You need this plugin in order to interact with other plugins managing Hooklift's resources.",
+    "description": "Manages authentication and access tokens using Hooklift Identity platform.",
     "author": {
         "name": "Camilo Aguilar",
         "email": "camilo@hooklift.io"
