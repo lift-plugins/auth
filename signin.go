@@ -10,7 +10,6 @@ import (
 
 	api "github.com/hooklift/apis/go/identity"
 	"github.com/hooklift/lift"
-	"github.com/lift-plugins/auth/openidc/clients"
 	"github.com/lift-plugins/auth/openidc/discovery"
 	apigrpc "github.com/lift-plugins/auth/openidc/grpc"
 	"github.com/lift-plugins/auth/openidc/tokens"
@@ -53,7 +52,7 @@ func SignIn(email, password, address string) error {
 	if err != nil {
 		gcode := grpc.Code(err)
 		if gcode == codes.Unauthenticated || gcode == codes.NotFound {
-			return errors.New("Email or password is not valid.")
+			return errors.New("email or password is not valid")
 		}
 		return errors.Wrap(err, "failed signing user in")
 	}
@@ -76,18 +75,17 @@ func SignIn(email, password, address string) error {
 	}
 
 	// Validates ID token signature, downloading provider config and signing keys if necessary.
-	if err := tokens.Validate(nonce); err != nil {
+	if err := tokens.Validate(lift.ClientID, nonce); err != nil {
 		return errors.Wrap(err, "failed validating tokens received from provider")
 	}
 
-	if err := tokens.Write(); err != nil {
-		return err
-	}
-
+	return tokens.Write()
 	// We register a Lift OAuth2 client per user for the following reasons:
 	// To no leak or share client credentials among users
 	// To avoid a rogue Lift CLI client causing damages to other users.
-	return clients.Register(ctx, grpcConn)
+	// Update: There is no way to adds the user's own CLI client app as audience to tokens generated for
+	// Hooklift's Lift CLI client app. It will break the security model of OpenID Connect to allow such thing.
+	//return clients.Register(ctx, grpcConn)
 }
 
 // randomValue returns a cryptographically random value.
