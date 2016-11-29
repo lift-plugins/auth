@@ -24,7 +24,7 @@ type JSONWebToken struct {
 	// Subject identifies the principal that is the subject of the token.
 	Subject string `json:"sub,omitempty"`
 	// Audiencie identifies the recipients that the token is intended for.
-	Audience string `json:"aud,omitempty"`
+	Audience []string `json:"aud,omitempty"`
 	// Expires is the expiration time on or after which the JWT MUST NOT be accepted for processing.
 	Expires int64 `json:"exp,omitempty"`
 	// NotBefore identifies the time before which the JWT MUST NOT be accepted for processing

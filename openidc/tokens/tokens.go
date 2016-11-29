@@ -64,7 +64,7 @@ func (tks *Tokens) Write() error {
 // Validate validates ID and Access tokens, according to:
 // http://openid.net/specs/openid-connect-core-1_0.html#rfc.section.3.1.3.7
 // http://openid.net/specs/openid-connect-core-1_0.html#ImplicitTokenValidation
-func (tks *Tokens) Validate(nonce string) error {
+func (tks *Tokens) Validate(clientID, nonce string) error {
 	idToken, err := Decode(tks.ID)
 	if err != nil {
 		return err
@@ -78,8 +78,15 @@ func (tks *Tokens) Validate(nonce string) error {
 		return errors.New("issuer in ID token does not match the identity provider originally used")
 	}
 
-	if lift.ClientID != idToken.Audience {
-		return errors.New("id token audience isn't Lift")
+	found := false
+	for _, aud := range idToken.Audience {
+		if lift.ClientID == aud || clientID == aud {
+			found = true
+		}
+	}
+
+	if !found {
+		return errors.New("ID token audience does not contain Lift CLI")
 	}
 
 	if idToken.AuthorizedParty != "" && idToken.AuthorizedParty != lift.ClientID {
@@ -137,7 +144,7 @@ func (tks *Tokens) RefreshIfExpired() error {
 
 	nonce := uuid.NewV4().String()
 	formValues := url.Values{
-		"grant-type":    {"refresh_token"},
+		"grant_type":    {"refresh_token"},
 		"refresh_token": {tks.Refresh},
 		"scope":         {accessToken.Scope},
 		"nonce":         {nonce},
@@ -177,7 +184,7 @@ func (tks *Tokens) RefreshIfExpired() error {
 	newTokens.Refresh = refreshRes.RefreshToken
 	newTokens.Issuer = config.Issuer
 
-	if err := newTokens.Validate(nonce); err != nil {
+	if err := newTokens.Validate(clientApp.ClientId, nonce); err != nil {
 		return err
 	}
 

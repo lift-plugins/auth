@@ -20,7 +20,7 @@ func Connection(address, userAgent string) (*grpc.ClientConn, error) {
 			return nil, errors.Wrapf(err, "failed parsing provider address: %q", address)
 		}
 
-		address = u.Host // it includes port ¯\_(ツ)_/¯
+		address = u.Host // it includes the port ¯\_(ツ)_/¯
 	}
 
 	clientOpts := []grpc.DialOption{
@@ -32,7 +32,7 @@ func Connection(address, userAgent string) (*grpc.ClientConn, error) {
 	// Since we want to let RPC calls, to public endpoints, go through just fine. Instead,
 	// We allow the server to complain back if an endpoint requiring authentication is attempting
 	// to be accessed without an access token.
-	creds, err := rpcCredentials()
+	creds, err := RPCCredentials()
 	if err == nil {
 		clientOpts = append(clientOpts, grpc.WithPerRPCCredentials(creds))
 	}

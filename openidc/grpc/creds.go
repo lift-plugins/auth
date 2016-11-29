@@ -11,10 +11,10 @@ type creds struct {
 	tks *tokens.Tokens
 }
 
-// rpcCredentials returns an implementation of credentials.PerRPCCredentials. Used to
+// RPCCredentials returns an implementation of credentials.PerRPCCredentials. Used to
 // authenticate GRPC calls against the server. If there are any errors, no authentication
 // is sent to the gRPC server.
-func rpcCredentials() (credentials.PerRPCCredentials, error) {
+func RPCCredentials() (credentials.PerRPCCredentials, error) {
 	tks := new(tokens.Tokens)
 	if err := tks.Read(); err != nil {
 		return nil, err

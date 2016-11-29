@@ -18,11 +18,6 @@ var clientPath = filepath.Join(config.WorkDir, "client.json")
 
 // Register creates a lift CLI client for the current logged user.
 func Register(ctx context.Context, serverConn *grpc.ClientConn) error {
-	client := new(Client)
-	if err := client.Read(); err == nil {
-		return nil
-	}
-
 	grpcClient := api.NewAppsClient(serverConn)
 	req := &api.RegisterApp{
 		ClientName:      "Lift CLI",

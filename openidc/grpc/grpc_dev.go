@@ -59,7 +59,7 @@ func Connection(address, userAgent string) (*grpc.ClientConn, error) {
 		grpc.WithUserAgent(userAgent),
 	}
 
-	creds, err := rpcCredentials()
+	creds, err := RPCCredentials()
 	if err == nil {
 		clientOpts = append(clientOpts, grpc.WithPerRPCCredentials(creds))
 	}
