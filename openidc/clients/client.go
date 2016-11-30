@@ -17,7 +17,7 @@ import (
 var clientPath = filepath.Join(config.WorkDir, "client.json")
 
 // Register creates a lift CLI client for the current logged user.
-func Register(ctx context.Context, serverConn *grpc.ClientConn) error {
+func Register(ctx context.Context, serverConn *grpc.ClientConn) (*Client, error) {
 	grpcClient := api.NewAppsClient(serverConn)
 	req := &api.RegisterApp{
 		ClientName:      "Lift CLI",
@@ -35,13 +35,17 @@ func Register(ctx context.Context, serverConn *grpc.ClientConn) error {
 
 	res, err := grpcClient.Register(ctx, req)
 	if err != nil {
-		return errors.Wrapf(err, "failed registering openidc client")
+		return nil, errors.Wrapf(err, "failed registering openidc client")
 	}
 
 	clientApp := new(Client)
 	clientApp.RegisterApp = *res
 
-	return clientApp.Write()
+	if err := clientApp.Write(); err != nil {
+		return nil, err
+	}
+
+	return clientApp, nil
 }
 
 // Client represents the OpenID Connect application used by Lift.

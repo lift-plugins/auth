@@ -2,19 +2,10 @@
 
 package grpc
 
-import (
-	"crypto/x509"
-	"log"
-	"net/url"
-	"strings"
-
-	"github.com/pkg/errors"
-
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
-)
-
-const tlsCert = `
+// tlsCert is the development server self-signed public certificate.
+// It is only compiled when "dev" build tag is used during compilation.
+func init() {
+	tlsCert = `
 -----BEGIN CERTIFICATE-----
 MIIDUzCCAtmgAwIBAgIJAKTf/aVGhWkYMAkGByqGSM49BAEwgZExCzAJBgNVBAYT
 AlVTMREwDwYDVQQIEwhOZXcgWW9yazERMA8GA1UEBxMITmV3IFlvcmsxFzAVBgNV
@@ -36,33 +27,4 @@ hWkYMAwGA1UdEwQFMAMBAf8wCQYHKoZIzj0EAQNpADBmAjEAnvDrqcg7Sl2wK/bH
 o9FuJqdUS5o9Rgii55nFhNdzQvT/p/ANGHBCfQyUNtAjPp92KvXC
 -----END CERTIFICATE-----
 `
-
-func Connection(address, userAgent string) (*grpc.ClientConn, error) {
-	// go-grpc fails if address has a scheme
-	if strings.HasPrefix(address, "http") {
-		u, err := url.Parse(address)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed parsing provider address: %q", address)
-		}
-		address = u.Host
-	}
-
-	certPool := x509.NewCertPool()
-	ok := certPool.AppendCertsFromPEM([]byte(tlsCert))
-	if !ok {
-		log.Fatal("Unable to append server TLS cert to cert pool")
-	}
-
-	clientCreds := credentials.NewClientTLSFromCert(certPool, address)
-	clientOpts := []grpc.DialOption{
-		grpc.WithTransportCredentials(clientCreds),
-		grpc.WithUserAgent(userAgent),
-	}
-
-	creds, err := RPCCredentials()
-	if err == nil {
-		clientOpts = append(clientOpts, grpc.WithPerRPCCredentials(creds))
-	}
-
-	return grpc.Dial(address, clientOpts...)
 }

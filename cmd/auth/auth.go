@@ -14,7 +14,9 @@ import (
 )
 
 // Version is defined in compilation time.
-var Version string
+var (
+	Version string
+)
 
 const usage = `
 Hooklift Identity CLI.
