@@ -2,3 +2,5 @@ build
 cmd/auth/auth
 auth
 dist
+// this file contains the OpenID Connect credentials for Lift CLI
+openidc.mk

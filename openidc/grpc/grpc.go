@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/lift-plugins/auth/openidc"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -52,7 +53,7 @@ func Connection(address, userAgent string) (*grpc.ClientConn, error) {
 		clientOpts = append(clientOpts, grpc.WithPerRPCCredentials(tokenCreds))
 	}
 
-	clientCreds := ClientCreds("7f60abff-de28-477b-9d5f-b546db04f7de", "6VTMEWsi,aM.9XscBrkLgBXEF*iDQ=8RBTbozpwyEywNyBj8@u")
+	clientCreds := ClientCreds(openidc.ClientID, openidc.ClientSecret)
 	clientOpts = append(clientOpts, grpc.WithPerRPCCredentials(clientCreds))
 
 	return grpc.Dial(address, clientOpts...)

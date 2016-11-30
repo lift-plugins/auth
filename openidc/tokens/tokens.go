@@ -14,9 +14,8 @@ import (
 
 	jose "gopkg.in/square/go-jose.v2"
 
-	"github.com/hooklift/lift"
 	"github.com/hooklift/lift/config"
-	"github.com/lift-plugins/auth/openidc/clients"
+	"github.com/lift-plugins/auth/openidc"
 	"github.com/lift-plugins/auth/openidc/discovery"
 	"github.com/lift-plugins/auth/openidc/oauth2"
 	"github.com/pkg/errors"
@@ -80,7 +79,7 @@ func (tks *Tokens) Validate(clientID, nonce string) error {
 
 	found := false
 	for _, aud := range idToken.Audience {
-		if lift.ClientID == aud || clientID == aud {
+		if clientID == aud {
 			found = true
 		}
 	}
@@ -89,7 +88,7 @@ func (tks *Tokens) Validate(clientID, nonce string) error {
 		return errors.New("ID token audience does not contain Lift CLI")
 	}
 
-	if idToken.AuthorizedParty != "" && idToken.AuthorizedParty != lift.ClientID {
+	if idToken.AuthorizedParty != "" && idToken.AuthorizedParty != openidc.ClientID {
 		return errors.New("authorized party in ID token does not match client ID")
 	}
 
@@ -133,7 +132,12 @@ func (tks *Tokens) RefreshIfExpired() error {
 		return err
 	}
 
-	if !accessToken.Expired() {
+	idToken, err := Decode(tks.ID)
+	if err != nil {
+		return err
+	}
+
+	if !accessToken.Expired() && !idToken.Expired() {
 		return nil
 	}
 
@@ -155,12 +159,7 @@ func (tks *Tokens) RefreshIfExpired() error {
 		return errors.Wrapf(err, "failed preparing HTTP request")
 	}
 
-	clientApp := new(clients.Client)
-	if err := clientApp.Read(); err != nil {
-		return err
-	}
-
-	req.SetBasicAuth(clientApp.ClientId, clientApp.ClientSecret)
+	req.SetBasicAuth(openidc.ClientID, openidc.ClientSecret)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := oauth2.Client.Do(req)
@@ -184,7 +183,7 @@ func (tks *Tokens) RefreshIfExpired() error {
 	newTokens.Refresh = refreshRes.RefreshToken
 	newTokens.Issuer = config.Issuer
 
-	if err := newTokens.Validate(clientApp.ClientId, nonce); err != nil {
+	if err := newTokens.Validate(openidc.ClientID, nonce); err != nil {
 		return err
 	}
 

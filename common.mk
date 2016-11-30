@@ -1,11 +1,11 @@
 BRANCH		:= $(shell git rev-parse --abbrev-ref HEAD)
-LDFLAGS 	:= -ldflags "-X main.Version=$(VERSION) -X main.Name=$(NAME)"
+LDFLAGS 	:= -ldflags "-X main.Version=$(VERSION) -X main.Name=$(NAME) -X openidc.ClientID=$(CLIENT_ID) -X openidc.ClientSecret=$(CLIENT_SECRET)"
 
 test:
 	go test ./...
 
 dev:
-	go build -tags dev -o $(NAME) $(LDFLAGS) cmd/$(NAME)/$(NAME).go
+	go build -tags dev -o $(NAME) $(LDFLAGS) cmd/$(NAME)/$(NAME).go && echo "Done"
 
 install:
 	go install $(LDFLAGS) cmd/$(NAME).go
