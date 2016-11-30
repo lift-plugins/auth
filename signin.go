@@ -34,7 +34,6 @@ func SignIn(email, password, address string) error {
 		Password:     string(password),
 		Scope:        "openid name email offline_access global",
 		ResponseType: "token id_token",
-		ClientId:     lift.ClientID,
 		State:        csrfToken,
 		Nonce:        nonce,
 	}
@@ -46,8 +45,8 @@ func SignIn(email, password, address string) error {
 	defer grpcConn.Close()
 
 	authzClient := api.NewAuthzClient(grpcConn)
-	ctx := context.Background()
 
+	ctx := context.Background()
 	resp, err := authzClient.SignIn(ctx, req)
 	if err != nil {
 		gcode := grpc.Code(err)
@@ -80,12 +79,7 @@ func SignIn(email, password, address string) error {
 	}
 
 	return tokens.Write()
-	// We register a Lift OAuth2 client per user for the following reasons:
-	// To no leak or share client credentials among users
-	// To avoid a rogue Lift CLI client causing damages to other users.
-	// Update: There is no way to adds the user's own CLI client app as audience to tokens generated for
-	// Hooklift's Lift CLI client app. It will break the security model of OpenID Connect to allow such thing.
-	//return clients.Register(ctx, grpcConn)
+
 }
 
 // randomValue returns a cryptographically random value.
