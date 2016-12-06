@@ -1,5 +1,5 @@
 BRANCH		:= $(shell git rev-parse --abbrev-ref HEAD)
-LDFLAGS 	:= -ldflags "-X main.Version=$(VERSION) -X main.Name=$(NAME) -X openidc.ClientID=$(CLIENT_ID) -X openidc.ClientSecret=$(CLIENT_SECRET)"
+LDFLAGS 	:= -ldflags "-X main.Version=$(VERSION) -X main.Name=$(NAME)"
 
 test:
 	go test ./...
