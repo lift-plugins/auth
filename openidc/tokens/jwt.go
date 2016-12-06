@@ -46,7 +46,7 @@ type JSONWebToken struct {
 	EmailVerified   bool   `json:"email_verified,omitempty"`
 
 	// Private claim set.
-	Scope string `json:"scope,omitempty"`
+	Scope []string `json:"scope,omitempty"`
 }
 
 // Expired returns whether or not the token has expired.

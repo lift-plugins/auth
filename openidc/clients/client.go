@@ -1,13 +1,13 @@
 package clients
 
 import (
-	"context"
 	"encoding/json"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
 	api "github.com/hooklift/apis/go/identity"
@@ -17,30 +17,34 @@ import (
 var clientPath = filepath.Join(config.WorkDir, "client.json")
 
 // Register creates a lift CLI client for the current logged user.
-func Register(ctx context.Context, serverConn *grpc.ClientConn) (*Client, error) {
-	grpcClient := api.NewAppsClient(serverConn)
+func Register(ctx context.Context, serverConn *grpc.ClientConn, username string) (*Client, error) {
+	clientService := api.NewAppsClient(serverConn)
+
 	req := &api.RegisterApp{
 		ClientName:      "Lift CLI",
-		ClientUri:       "https://www.hooklift.io/lift",
+		ClientUri:       "https://www.hooklift.io/lift?user=" + username,
 		ApplicationType: "native",
-		RedirectUris:    []string{"http://localhost/lift/callback"},
+		RedirectUris:    []string{"http://localhost:9999/callback"},
 		ResponseTypes:   []string{"token", "id_token"},
 		GrantTypes:      []string{"password", "refresh_token"},
 		LogoUri:         "https://avatars1.githubusercontent.com/u/22415297?v=3&s=200",
-		Contacts:        []string{"id@hooklift.io"},
+		Contacts:        []string{"eng@hooklift.io"},
 		PolicyUri:       "https://www.hooklift.io/policy/privacy",
 		TosUri:          "https://www.hooklift.io/policy/tos",
 		IdTokenSignedResponseAlg: "ES256",
 	}
 
-	res, err := grpcClient.Register(ctx, req)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed registering openidc client")
+	clientApp := new(Client)
+	if err := clientApp.Read(); err == nil {
+		return clientApp, nil
 	}
 
-	clientApp := new(Client)
-	clientApp.RegisterApp = *res
+	res, err := clientService.Register(ctx, req)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed registering openidc client for Lift")
+	}
 
+	clientApp.RegisterApp = *res
 	if err := clientApp.Write(); err != nil {
 		return nil, err
 	}
@@ -70,11 +74,11 @@ func (c *Client) Write() error {
 func (c *Client) Read() error {
 	data, err := ioutil.ReadFile(clientPath)
 	if err != nil {
-		return errors.Wrapf(err, "failed reading tokens file at %q", clientPath)
+		return errors.Wrapf(err, "failed reading client config from %q", clientPath)
 	}
 
 	if err := json.Unmarshal(data, &c); err != nil {
-		return errors.Wrapf(err, "failed unmarshaling tokens file at %q", clientPath)
+		return errors.Wrapf(err, "failed unmarshaling client config from %q", clientPath)
 	}
 	return nil
 }

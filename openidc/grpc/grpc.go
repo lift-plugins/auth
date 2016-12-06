@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/lift-plugins/auth/openidc"
+	"github.com/lift-plugins/auth/openidc/clients"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -17,7 +17,7 @@ import (
 var tlsCert = ""
 
 // Connection returns a server connection to the OpenIDConnect Provider.
-func Connection(address, userAgent string) (*grpc.ClientConn, error) {
+func Connection(address, userAgent string, creds ...string) (*grpc.ClientConn, error) {
 	// go-grpc fails if address has a scheme
 	if strings.HasPrefix(address, "http") {
 		u, err := url.Parse(address)
@@ -33,6 +33,7 @@ func Connection(address, userAgent string) (*grpc.ClientConn, error) {
 		grpc.WithUserAgent(userAgent),
 	}
 
+	// If tlsCert is not empty it means, this binary was compiled with "dev" build tag
 	if tlsCert != "" {
 		certPool := x509.NewCertPool()
 		ok := certPool.AppendCertsFromPEM([]byte(tlsCert))
@@ -40,8 +41,8 @@ func Connection(address, userAgent string) (*grpc.ClientConn, error) {
 			log.Fatal("Unable to append server TLS cert to cert pool")
 		}
 
-		clientCreds := credentials.NewClientTLSFromCert(certPool, address)
-		clientOpts = append(clientOpts, grpc.WithTransportCredentials(clientCreds))
+		clientTLS := credentials.NewClientTLSFromCert(certPool, address)
+		clientOpts = append(clientOpts, grpc.WithTransportCredentials(clientTLS))
 	}
 
 	// We do not fail if there is any problem getting locally stored access token.
@@ -53,8 +54,21 @@ func Connection(address, userAgent string) (*grpc.ClientConn, error) {
 		clientOpts = append(clientOpts, grpc.WithPerRPCCredentials(tokenCreds))
 	}
 
-	clientCreds := ClientCreds(openidc.ClientID, openidc.ClientSecret)
-	clientOpts = append(clientOpts, grpc.WithPerRPCCredentials(clientCreds))
+	client := new(clients.Client)
+	var basicCreds credentials.PerRPCCredentials
+	if err := client.Read(); err != nil {
+		// Most likely the client for the current user's CLI does not exist in her account
+		// or the metadata was not found in her machine. So, we proceed to create or retrieve the client using
+		// her account credentials as this is executed before attempting a sign-in.
+		if len(creds) == 2 {
+			basicCreds = BasicCreds(creds[0], creds[1])
+		}
+	} else {
+		// We need to use client credentials when calling the sign-in service in the server as per the OpenID Connect spec.
+		basicCreds = BasicCreds(client.ClientId, client.ClientSecret)
+	}
+
+	clientOpts = append(clientOpts, grpc.WithPerRPCCredentials(basicCreds))
 
 	return grpc.Dial(address, clientOpts...)
 }

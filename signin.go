@@ -1,24 +1,36 @@
 package auth
 
 import (
-	"context"
 	"crypto/rand"
 	"fmt"
 
+	"github.com/pkg/errors"
+	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 
 	api "github.com/hooklift/apis/go/identity"
-	"github.com/hooklift/lift"
+	"github.com/lift-plugins/auth/openidc/clients"
 	"github.com/lift-plugins/auth/openidc/discovery"
 	apigrpc "github.com/lift-plugins/auth/openidc/grpc"
 	"github.com/lift-plugins/auth/openidc/tokens"
-
-	"github.com/pkg/errors"
 )
 
 // SignIn authenticates the user against an identity provider.
 func SignIn(email, password, address string) error {
+	ctx := context.Background()
+
+	grpcConn, err := apigrpc.Connection(address, "lift-auth", email, password)
+	if err != nil {
+		return errors.Wrap(err, "failed connecting to openid provider.")
+	}
+	defer grpcConn.Close()
+
+	client, err := clients.Register(ctx, grpcConn, email)
+	if err != nil {
+		return err
+	}
+
 	csrfToken, err := randomValue()
 	if err != nil {
 		return errors.Wrap(err, "failed generating cryptographic random value for CSRF token")
@@ -32,21 +44,20 @@ func SignIn(email, password, address string) error {
 	req := &api.SignInRequest{
 		Username:     email,
 		Password:     string(password),
-		Scope:        "openid name email offline_access global",
-		ResponseType: "token id_token",
-		State:        csrfToken,
-		Nonce:        nonce,
+		Scope:        []string{"openid", "name", "email", "offline_access", "global"},
+		ResponseType: []string{"token", "id_token"},
+		Audience: []string{
+			// To be able to publish and unpublish plugins from the registry.
+			"https://lift.hooklift.io",
+			// To be able to interact with Hooklift's Platform API to deploy apps,
+			// tail logs, manage apps configurations, etc.
+			"https://api.hooklift.io",
+		},
+		State: csrfToken,
+		Nonce: nonce,
 	}
-
-	grpcConn, err := apigrpc.Connection(address, "lift-auth")
-	if err != nil {
-		return errors.Wrap(err, "failed connecting to openid provider.")
-	}
-	defer grpcConn.Close()
 
 	authzClient := api.NewAuthzClient(grpcConn)
-
-	ctx := context.Background()
 	resp, err := authzClient.SignIn(ctx, req)
 	if err != nil {
 		gcode := grpc.Code(err)
@@ -74,7 +85,7 @@ func SignIn(email, password, address string) error {
 	}
 
 	// Validates ID token signature, downloading provider config and signing keys if necessary.
-	if err := tokens.Validate(lift.ClientID, nonce); err != nil {
+	if err := tokens.Validate(client.ClientId, nonce); err != nil {
 		return errors.Wrap(err, "failed validating tokens received from provider")
 	}
 

@@ -1,10 +1,10 @@
 package grpc
 
 import (
-	"github.com/lift-plugins/auth/openidc/tokens"
-
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/credentials"
+
+	"github.com/lift-plugins/auth/openidc/tokens"
 )
 
 type tokenCreds struct {

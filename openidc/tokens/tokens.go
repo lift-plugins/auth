@@ -4,6 +4,7 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -15,7 +16,7 @@ import (
 	jose "gopkg.in/square/go-jose.v2"
 
 	"github.com/hooklift/lift/config"
-	"github.com/lift-plugins/auth/openidc"
+	"github.com/lift-plugins/auth/openidc/clients"
 	"github.com/lift-plugins/auth/openidc/discovery"
 	"github.com/lift-plugins/auth/openidc/oauth2"
 	"github.com/pkg/errors"
@@ -77,18 +78,7 @@ func (tks *Tokens) Validate(clientID, nonce string) error {
 		return errors.New("issuer in ID token does not match the identity provider originally used")
 	}
 
-	found := false
-	for _, aud := range idToken.Audience {
-		if clientID == aud {
-			found = true
-		}
-	}
-
-	if !found {
-		return errors.New("ID token audience does not contain Lift CLI")
-	}
-
-	if idToken.AuthorizedParty != "" && idToken.AuthorizedParty != openidc.ClientID {
+	if idToken.AuthorizedParty != "" && idToken.AuthorizedParty != clientID {
 		return errors.New("authorized party in ID token does not match client ID")
 	}
 
@@ -150,7 +140,7 @@ func (tks *Tokens) RefreshIfExpired() error {
 	formValues := url.Values{
 		"grant_type":    {"refresh_token"},
 		"refresh_token": {tks.Refresh},
-		"scope":         {accessToken.Scope},
+		"scope":         {strings.Join(accessToken.Scope, " ")},
 		"nonce":         {nonce},
 	}
 
@@ -159,7 +149,12 @@ func (tks *Tokens) RefreshIfExpired() error {
 		return errors.Wrapf(err, "failed preparing HTTP request")
 	}
 
-	req.SetBasicAuth(openidc.ClientID, openidc.ClientSecret)
+	client := new(clients.Client)
+	if err := client.Read(); err != nil {
+		return err
+	}
+
+	req.SetBasicAuth(client.ClientId, client.ClientSecret)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := oauth2.Client.Do(req)
@@ -169,7 +164,7 @@ func (tks *Tokens) RefreshIfExpired() error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return errors.New("unexpected response status code")
+		return fmt.Errorf("unexpected response status code: %d", resp.StatusCode)
 	}
 
 	refreshRes := new(refreshTokenResponse)
@@ -183,7 +178,7 @@ func (tks *Tokens) RefreshIfExpired() error {
 	newTokens.Refresh = refreshRes.RefreshToken
 	newTokens.Issuer = config.Issuer
 
-	if err := newTokens.Validate(openidc.ClientID, nonce); err != nil {
+	if err := newTokens.Validate(client.ClientId, nonce); err != nil {
 		return err
 	}
 
