@@ -5,7 +5,7 @@ test:
 	go test ./...
 
 dev:
-	go build -tags dev -o $(NAME) $(LDFLAGS) cmd/$(NAME)/$(NAME).go && echo "Done"
+	go build -tags dev -o $(NAME) $(LDFLAGS) cmd/$(NAME)/$(NAME).go
 
 install:
 	go install $(LDFLAGS) cmd/$(NAME).go

@@ -5,13 +5,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	jose "gopkg.in/square/go-jose.v2"
 
@@ -61,10 +61,15 @@ func (tks *Tokens) Write() error {
 	return nil
 }
 
-// Validate validates ID and Access tokens, according to:
+// Verify validates ID and Access tokens, according to:
 // http://openid.net/specs/openid-connect-core-1_0.html#rfc.section.3.1.3.7
 // http://openid.net/specs/openid-connect-core-1_0.html#ImplicitTokenValidation
-func (tks *Tokens) Validate(clientID, nonce string) error {
+func (tks *Tokens) Verify(clientID, nonce string) error {
+	header, err := Verify(tks.ID)
+	if err != nil {
+		return err
+	}
+
 	idToken, err := Decode(tks.ID)
 	if err != nil {
 		return err
@@ -82,15 +87,14 @@ func (tks *Tokens) Validate(clientID, nonce string) error {
 		return errors.New("authorized party in ID token does not match client ID")
 	}
 
-	expires := time.Unix(idToken.Expires, 0)
-	if time.Now().After(expires) {
+	if idToken.Expired() {
 		return errors.New("ID token has expired")
 	}
 
 	if tks.Access != "" && idToken.AtHash != "" {
-		atHash := hash(tks.Access, idToken.Header.Algorithm)
+		atHash := hash(tks.Access, header.Algorithm)
 		if atHash != idToken.AtHash {
-			return errors.New("calculated access token hash value does not match the value declared in ID token")
+			return errors.New("calculated hash value from access token doesn't match value declared in ID token")
 		}
 	}
 
@@ -99,16 +103,18 @@ func (tks *Tokens) Validate(clientID, nonce string) error {
 
 // RefreshTokenResponse holds the response from the OpenIDC Provider when refreshing access tokens.
 type refreshTokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	TokenType    string `json:"token_type"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresIn    string `json:"expires_in"`
-	IDToken      string `json:"id_token"`
-	Error        string `json:"error"`
+	AccessToken      string `json:"access_token"`
+	TokenType        string `json:"token_type"`
+	RefreshToken     string `json:"refresh_token"`
+	ExpiresIn        int    `json:"expires_in"`
+	IDToken          string `json:"id_token"`
+	Error            string `json:"error"`
+	ErrorDescription string `json:"error_description"`
+	ErrorURI         string `json:"error_uri"`
 }
 
-// RefreshIfExpired refreshes ID, Access and Refresh tokens using current refresh token.
-func (tks *Tokens) RefreshIfExpired() error {
+// RefreshToken refreshes ID, Access and Refresh tokens using current refresh token. Only if any of the tokens expired.
+func (tks *Tokens) RefreshToken() error {
 	if tks.Access == "" {
 		return errors.New("there is no access token to refresh")
 	}
@@ -141,7 +147,7 @@ func (tks *Tokens) RefreshIfExpired() error {
 		"grant_type":    {"refresh_token"},
 		"refresh_token": {tks.Refresh},
 		"scope":         {strings.Join(accessToken.Scope, " ")},
-		"nonce":         {nonce},
+		"state":         {nonce},
 	}
 
 	req, err := http.NewRequest(http.MethodPost, config.TokenEndpoint, strings.NewReader(formValues.Encode()))
@@ -163,13 +169,24 @@ func (tks *Tokens) RefreshIfExpired() error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("unexpected response status code: %d", resp.StatusCode)
+	refreshRes := new(refreshTokenResponse)
+	body, err := ioutil.ReadAll(io.LimitReader(resp.Body, 1<<20)) // reads up to 1mb
+	if err != nil {
+		return errors.Wrapf(err, "failed reading response body")
 	}
 
-	refreshRes := new(refreshTokenResponse)
-	if err := json.NewDecoder(resp.Body).Decode(refreshRes); err != nil {
-		return errors.Wrapf(err, "failed unmarshaling response")
+	if err := json.Unmarshal(body, refreshRes); err != nil {
+		return errors.Wrapf(err, "failed unmarshaling response: %s", string(body[:]))
+	}
+
+	if refreshRes.Error != "" {
+		return fmt.Errorf("%s: %s. %s", refreshRes.Error, refreshRes.ErrorDescription, refreshRes.ErrorURI)
+	}
+
+	// Refreshes identity provider configuration and keys. Making sure we retrieved new
+	// signing keys that may have been generated.
+	if err := discovery.Run(config.Issuer); err != nil {
+		return errors.Wrapf(err, "failed refreshing provider configuration from %q", config.Issuer)
 	}
 
 	newTokens := new(Tokens)
@@ -178,11 +195,16 @@ func (tks *Tokens) RefreshIfExpired() error {
 	newTokens.Refresh = refreshRes.RefreshToken
 	newTokens.Issuer = config.Issuer
 
-	if err := newTokens.Validate(client.ClientId, nonce); err != nil {
+	if err := newTokens.Verify(client.ClientId, nonce); err != nil {
 		return err
 	}
 
-	return newTokens.Write()
+	if err := newTokens.Write(); err != nil {
+		return err
+	}
+
+	tks = newTokens
+	return nil
 }
 
 // hash helps prevent token substitution attacks by hashing a given token value and

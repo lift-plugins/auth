@@ -1,7 +1,10 @@
 package tokens
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"strings"
 	"time"
 
 	jose "gopkg.in/square/go-jose.v2"
@@ -15,8 +18,6 @@ const leeway = 10 * time.Second
 
 // JSONWebToken represents a decoded OpenID Connect token.
 type JSONWebToken struct {
-	Header jose.Header
-
 	// ID is the token unique identifier.
 	ID string `json:"jti,omitempty"`
 	// Issuer identifies the entity that issued the token.
@@ -59,38 +60,53 @@ func (t *JSONWebToken) Expired() bool {
 	return expiry.Add(-leeway).Before(time.Now())
 }
 
-// Decode verifies signature and decodes token. If signing keys hasn't been discovered it returns an error.
-func Decode(token string) (*JSONWebToken, error) {
+// Verify checks token signature and returns its payload and signature header.
+func Verify(token string) (jose.Header, error) {
+	var header jose.Header
 	jws, err := jose.ParseSigned(token)
 	if err != nil {
-		return nil, errors.Wrap(err, "jwt: failed parsing token signature")
+		return header, errors.Wrap(err, "failed parsing token signature")
 	}
 
 	if len(jws.Signatures) != 1 {
-		return nil, errors.New("jwt: too many or too few signatures")
+		return header, errors.New("too many or too few signatures")
 	}
 
 	keys := new(discovery.SigningKeys)
 	if err := keys.Read(); err != nil {
-		return nil, err
+		return header, err
 	}
 
-	header := jws.Signatures[0].Header
+	header = jws.Signatures[0].Header
 	jwk, err := keys.Key(header.KeyID)
 	if err != nil {
-		return nil, err
+		return header, err
 	}
 
-	jwtBytes, err := jws.Verify(&jwk)
+	_, err = jws.Verify(&jwk)
 	if err != nil {
-		return nil, errors.Wrap(err, "jwt: token integrity couldn't be verified")
+		return header, errors.Wrap(err, "token integrity couldn't be verified")
+	}
+
+	return header, nil
+}
+
+// Decode decodes a base64 encoded JWT token, without verifying its signature.
+func Decode(token string) (*JSONWebToken, error) {
+	parts := strings.Split(token, ".")
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("compact JWS format must have three parts")
+	}
+
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return nil, errors.Wrap(err, "failed decoding token payload")
 	}
 
 	jwt := new(JSONWebToken)
-	if err := json.Unmarshal(jwtBytes, jwt); err != nil {
-		return nil, errors.Wrap(err, "jwt: failed unmarshling token")
+	if err := json.Unmarshal(payload, jwt); err != nil {
+		return nil, errors.Wrap(err, "failed decoding token")
 	}
-	jwt.Header = header
 
 	return jwt, nil
 }

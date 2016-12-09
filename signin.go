@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 
 	api "github.com/hooklift/apis/go/identity"
+	"github.com/hooklift/lift/ui"
 	"github.com/lift-plugins/auth/openidc/clients"
 	"github.com/lift-plugins/auth/openidc/discovery"
 	apigrpc "github.com/lift-plugins/auth/openidc/grpc"
@@ -33,17 +34,17 @@ func SignIn(email, password, address string) error {
 
 	csrfToken, err := randomValue()
 	if err != nil {
-		return errors.Wrap(err, "failed generating cryptographic random value for CSRF token")
+		return errors.Wrap(err, "failed getting random value for CSRF token")
 	}
 
 	nonce, err := randomValue()
 	if err != nil {
-		return errors.Wrap(err, "failed generating cryptographic random value for ID Token nonce")
+		return errors.Wrap(err, "failed getting random value for ID Token nonce")
 	}
 
 	req := &api.SignInRequest{
 		Username:     email,
-		Password:     string(password),
+		Password:     password,
 		Scope:        []string{"openid", "name", "email", "offline_access", "global"},
 		ResponseType: []string{"token", "id_token"},
 		Audience: []string{
@@ -57,24 +58,26 @@ func SignIn(email, password, address string) error {
 		Nonce: nonce,
 	}
 
-	authzClient := api.NewAuthzClient(grpcConn)
-	resp, err := authzClient.SignIn(ctx, req)
+	authz := api.NewAuthzClient(grpcConn)
+	resp, err := authz.SignIn(ctx, req)
 	if err != nil {
 		gcode := grpc.Code(err)
 		if gcode == codes.Unauthenticated || gcode == codes.NotFound {
-			return errors.New("email or password is not valid")
+			return errors.New("Email or password is not valid")
 		}
-		return errors.Wrap(err, "failed signing user in")
+
+		ui.Debug("%+v", errors.Wrap(err, "failed signing user in"))
+		return errors.New("We failed signing you in. Please try again.")
 	}
 
 	if resp.State != csrfToken {
-		return errors.New("csrf token received does not match the value we sent")
+		return errors.New("CSRF token received does not match value sent.")
 	}
 
 	// Discovers OpenID Connect configuration for the given provider address and refreshes cached
 	// configuration and signing keys.
 	if err := discovery.Run(address); err != nil {
-		return errors.Wrapf(err, "failed discovering provider configuration from %q", address)
+		return errors.Wrapf(err, "failed discovering identity config from %q", address)
 	}
 
 	tokens := &tokens.Tokens{
@@ -84,13 +87,13 @@ func SignIn(email, password, address string) error {
 		Refresh: resp.RefreshToken,
 	}
 
-	// Validates ID token signature, downloading provider config and signing keys if necessary.
-	if err := tokens.Validate(client.ClientId, nonce); err != nil {
-		return errors.Wrap(err, "failed validating tokens received from provider")
+	// Verifies that ID token hasn't been tampared by checking its signature and relationship
+	// with the Access token.
+	if err := tokens.Verify(client.ClientId, nonce); err != nil {
+		return errors.Wrap(err, "failed validating received tokens")
 	}
 
 	return tokens.Write()
-
 }
 
 // randomValue returns a cryptographically random value.

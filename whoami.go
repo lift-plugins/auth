@@ -11,6 +11,10 @@ func WhoAmI() (string, error) {
 		return "", err
 	}
 
+	if _, err := tokens.Verify(tks.ID); err != nil {
+		return "", err
+	}
+
 	token, err := tokens.Decode(tks.ID)
 	if err != nil {
 		return "", err

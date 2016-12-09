@@ -26,7 +26,7 @@ func AccessTokenCreds() (credentials.PerRPCCredentials, error) {
 }
 
 func (c *tokenCreds) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
-	if err := c.tks.RefreshIfExpired(); err != nil {
+	if err := c.tks.RefreshToken(); err != nil {
 		return nil, err
 	}
 
