@@ -1,96 +1,180 @@
 {
     "name": "auth",
-    "version": "v1.1.0",
+    "version": "v1.2.0",
     "description": "Manages authentication and access tokens using Hooklift Identity platform.",
     "author": {
         "name": "Camilo Aguilar",
         "email": "camilo@hooklift.io"
     },
     "license": "MPL-2.0",
-    "files_uri": "https://github.com/lift-plugins/auth/releases/download/v1.1.0",
+    "files_uri": "https://github.com/lift-plugins/auth/releases/download/v1.2.0",
     "packages": [
         {
-            "name": "auth_v1.1.0_darwin_386.tar.gz",
+            "name": "auth_v1.2.0_darwin_386.sha512",
             "arch": "386",
             "os": "darwin",
-            "checksum": "a8e711c045567fadf38fcd92e219a51464b1b046499e269cd6f3d2349e6a9285",
+            "checksum": "e1b34292fafcf0a2dce22fe3c63d8e166b6bf9fbd50b4fe96e1d97e4cf0971eb",
             "algorithm": "sha256"
         },
         {
-            "name": "auth_v1.1.0_darwin_amd64.tar.gz",
+            "name": "auth_v1.2.0_darwin_386.tar.gz",
+            "arch": "386",
+            "os": "darwin",
+            "checksum": "19a63278f016d7ea2cb5304c86f3e6cab6a957b6fc6123408f79d1f02ef7179b",
+            "algorithm": "sha256"
+        },
+        {
+            "name": "auth_v1.2.0_darwin_amd64.sha512",
             "arch": "amd64",
             "os": "darwin",
-            "checksum": "a60c465b966cea10d2aeaebf6835fe1f266bb6bcf4ad3b1aaf11e262735f5384",
+            "checksum": "0945232fb34a6fc50ddf3f08284764c5464fb144e10a359026aaaf73da2604c2",
             "algorithm": "sha256"
         },
         {
-            "name": "auth_v1.1.0_freebsd_386.tar.gz",
+            "name": "auth_v1.2.0_darwin_amd64.tar.gz",
+            "arch": "amd64",
+            "os": "darwin",
+            "checksum": "15e4b7dd2d13085c300cc0cd4ae90a420f80b304809da0581727319fbcff9d2d",
+            "algorithm": "sha256"
+        },
+        {
+            "name": "auth_v1.2.0_freebsd_386.sha512",
             "arch": "386",
             "os": "freebsd",
-            "checksum": "407d945e4e50334942a8afd49eb9470783c612e9bcb2984a54ad75fa257cd99d",
+            "checksum": "fe7877c0e272cea62f40f67680984ce508f9464be0f759f3d3d8cc72aa605ea2",
             "algorithm": "sha256"
         },
         {
-            "name": "auth_v1.1.0_freebsd_amd64.tar.gz",
+            "name": "auth_v1.2.0_freebsd_386.tar.gz",
+            "arch": "386",
+            "os": "freebsd",
+            "checksum": "123de537f859de4cf8d36cb659366bb41286169212d71c4b50b54d976143f18c",
+            "algorithm": "sha256"
+        },
+        {
+            "name": "auth_v1.2.0_freebsd_amd64.sha512",
             "arch": "amd64",
             "os": "freebsd",
-            "checksum": "53a06bcb67808b52e43a97492ddca7b6b3be3f5d7b1614a1b81fb41cd805b691",
+            "checksum": "938ad53018c3fe56276f22bc7c7b27ef8b447ba742247180372265ee78b364e8",
             "algorithm": "sha256"
         },
         {
-            "name": "auth_v1.1.0_freebsd_arm.tar.gz",
+            "name": "auth_v1.2.0_freebsd_amd64.tar.gz",
+            "arch": "amd64",
+            "os": "freebsd",
+            "checksum": "d651e53be9fef9a6b388deaff2ae29707ad46a5bcf37fb9de3a902116035b6bb",
+            "algorithm": "sha256"
+        },
+        {
+            "name": "auth_v1.2.0_freebsd_arm.sha512",
             "arch": "arm",
             "os": "freebsd",
-            "checksum": "7372a8231953e0774da6f4f81d5927eaed82b42f97662c071c9b3a204dc1b2ae",
+            "checksum": "049784f60f4b0208a57cc079a113a013f64b957984e94cc60d41f4ff0bd30278",
             "algorithm": "sha256"
         },
         {
-            "name": "auth_v1.1.0_linux_386.tar.gz",
+            "name": "auth_v1.2.0_freebsd_arm.tar.gz",
+            "arch": "arm",
+            "os": "freebsd",
+            "checksum": "890f738704f03249e72e7ee4b153141d4c54647527979f112abe951dc42fe3e3",
+            "algorithm": "sha256"
+        },
+        {
+            "name": "auth_v1.2.0_linux_386.sha512",
             "arch": "386",
             "os": "linux",
-            "checksum": "8701630444a255c60d5f67b95919db5dd94ddd7d02b9817b5267009167482195",
+            "checksum": "df9539fa9c9aaa6d6e93fbc877c7fad80e47bceed40a242ce5900528548571f6",
             "algorithm": "sha256"
         },
         {
-            "name": "auth_v1.1.0_linux_amd64.tar.gz",
+            "name": "auth_v1.2.0_linux_386.tar.gz",
+            "arch": "386",
+            "os": "linux",
+            "checksum": "befea36cd62472d28f098587c319302f22b9945d81db11e33efa14c6cf0e83cd",
+            "algorithm": "sha256"
+        },
+        {
+            "name": "auth_v1.2.0_linux_amd64.sha512",
             "arch": "amd64",
             "os": "linux",
-            "checksum": "938e4d2c994d3538408011e436e158d864ad830297d30cbcd34023fa8706395d",
+            "checksum": "4d0317bcff706962deeba614dc9b6f03b63809038d4512672eb056e64b145af4",
             "algorithm": "sha256"
         },
         {
-            "name": "auth_v1.1.0_linux_arm.tar.gz",
+            "name": "auth_v1.2.0_linux_amd64.tar.gz",
+            "arch": "amd64",
+            "os": "linux",
+            "checksum": "9cf98c7ac88d6aa5948ce865fcf407c27f694474648b1304b68146ed42a9890b",
+            "algorithm": "sha256"
+        },
+        {
+            "name": "auth_v1.2.0_linux_arm.sha512",
             "arch": "arm",
             "os": "linux",
-            "checksum": "e832259fc2ced9d1aa7e5c364c33a869c93a501b7eb993cddf2ee179a71167ad",
+            "checksum": "077e32d8b459c20d5570de9c70b260afdc0d448fdb89bb4e942400f24e6fcedb",
             "algorithm": "sha256"
         },
         {
-            "name": "auth_v1.1.0_linux_arm64.tar.gz",
+            "name": "auth_v1.2.0_linux_arm.tar.gz",
+            "arch": "arm",
+            "os": "linux",
+            "checksum": "79dfc4825eec412a0b1ddbf9588dd2817fcdd9bf8d1929f137fdaf6e9612ff72",
+            "algorithm": "sha256"
+        },
+        {
+            "name": "auth_v1.2.0_linux_arm64.sha512",
             "arch": "arm64",
             "os": "linux",
-            "checksum": "df406af0d828f7f2276bd39b897aecc1ec462d32d29e875a857404719c77b41d",
+            "checksum": "795a4e13254037f36357fd1fc870355656e19a884047f08b06565adeff12e47a",
             "algorithm": "sha256"
         },
         {
-            "name": "auth_v1.1.0_solaris_amd64.tar.gz",
+            "name": "auth_v1.2.0_linux_arm64.tar.gz",
+            "arch": "arm64",
+            "os": "linux",
+            "checksum": "910000642c3da2c216c51710bdd617dfd512a7ffa36226437fef2f9f020a7cbe",
+            "algorithm": "sha256"
+        },
+        {
+            "name": "auth_v1.2.0_solaris_amd64.sha512",
             "arch": "amd64",
             "os": "solaris",
-            "checksum": "729e0b425e30c10c9b989a7f4f6e7b362c11bd6ae370833fd5ea470270607b77",
+            "checksum": "9c07249a920da99db18caf0a56a4d43d6529b5678c270460c088ef218d63b0ae",
             "algorithm": "sha256"
         },
         {
-            "name": "auth_v1.1.0_windows_386.tar.gz",
+            "name": "auth_v1.2.0_solaris_amd64.tar.gz",
+            "arch": "amd64",
+            "os": "solaris",
+            "checksum": "b37a68f9551ba67816aa05a3fe0c34539a6d97529289de85bd8084ff2a015e54",
+            "algorithm": "sha256"
+        },
+        {
+            "name": "auth_v1.2.0_windows_386.sha512",
             "arch": "386",
             "os": "windows",
-            "checksum": "dadac970284927b84c2f4e5c6699d2105448eebf2046633433641d729ab2f127",
+            "checksum": "720912ac63c4d9c7c1e33af71f8a32740941f7dc7f1d9696e6e6d05600bab373",
             "algorithm": "sha256"
         },
         {
-            "name": "auth_v1.1.0_windows_amd64.tar.gz",
+            "name": "auth_v1.2.0_windows_386.tar.gz",
+            "arch": "386",
+            "os": "windows",
+            "checksum": "fb509b45bdae1e3bef39e475b53912046a2a72f2e1944e52a547449594d5735a",
+            "algorithm": "sha256"
+        },
+        {
+            "name": "auth_v1.2.0_windows_amd64.sha512",
             "arch": "amd64",
             "os": "windows",
-            "checksum": "9624b21706f6eea0d8a8ea7b75cf7d7e067373e976b2263a501bf901751ff596",
+            "checksum": "7ca0d7c9b6f9c0943f1b8850a76fdd37496839be81678a3614c575db89de326e",
+            "algorithm": "sha256"
+        },
+        {
+            "name": "auth_v1.2.0_windows_amd64.tar.gz",
+            "arch": "amd64",
+            "os": "windows",
+            "checksum": "b62823850172d59603a5183af9af2b95ea2c4f8c49354e95b2061ddb4851d792",
             "algorithm": "sha256"
         }
     ]
