@@ -4,8 +4,10 @@ import (
 	"context"
 
 	api "github.com/hooklift/apis/go/identity"
+	"github.com/hooklift/lift/ui"
 	"github.com/lift-plugins/auth/openidc/grpc"
 	"github.com/lift-plugins/auth/openidc/tokens"
+	"github.com/pkg/errors"
 )
 
 // SignOut removes locally stored tokens and does best effort to revoke tokens from
@@ -15,8 +17,9 @@ func SignOut(address string) error {
 
 	serverConn, err := grpc.Connection(address, "lift-auth")
 	if err != nil {
-		// We cannot do explicit revokation so we just return, leaving the identity
-		// server to expire the tokens.
+		// We were unable to revoke tokens in the server, so we just return
+		// and let them expire.
+		ui.Debug("%+v", errors.Wrap(err, "we were unable to revoke tokens in the server"))
 		return nil
 	}
 	defer serverConn.Close()
@@ -24,6 +27,8 @@ func SignOut(address string) error {
 	client := api.NewAuthzClient(serverConn)
 	ctx := context.Background()
 
-	client.SignOut(ctx, new(api.SignOutRequest))
+	if _, err := client.SignOut(ctx, new(api.SignOutRequest)); err != nil {
+		ui.Debug("%+v", errors.Wrap(err, "failed signing user out from identity server"))
+	}
 	return nil
 }
