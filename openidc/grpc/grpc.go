@@ -2,10 +2,10 @@ package grpc
 
 import (
 	"crypto/x509"
-	"log"
 	"net/url"
 	"strings"
 
+	"github.com/hooklift/lift/ui"
 	"github.com/lift-plugins/auth/openidc/clients"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
@@ -38,7 +38,7 @@ func Connection(address, userAgent string, creds ...string) (*grpc.ClientConn, e
 		certPool := x509.NewCertPool()
 		ok := certPool.AppendCertsFromPEM([]byte(tlsCert))
 		if !ok {
-			log.Fatal("Unable to append server TLS cert to cert pool")
+			ui.Fatal("Unable to append server TLS cert to cert pool")
 		}
 
 		clientTLS := credentials.NewClientTLSFromCert(certPool, address)

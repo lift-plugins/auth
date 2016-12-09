@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 
 	jose "gopkg.in/square/go-jose.v2"
 
 	"github.com/hooklift/lift/config"
+	"github.com/hooklift/lift/ui"
 	"github.com/lift-plugins/auth/openidc/oauth2"
 	"github.com/pkg/errors"
 )
@@ -42,7 +42,7 @@ func (k *SigningKeys) Fetch(jwkURI string) error {
 	for _, key := range keySet.Keys {
 		if !key.Valid() {
 			// TODO(c4milo): send metric to alert Hooklift security team about this.
-			log.Fatalf("JSON Web Key %q is not a valid crypto key \n", key.KeyID)
+			ui.Fatal("JSON Web Key %q is not a valid crypto key \n", key.KeyID)
 		}
 		k.Keys[key.KeyID] = key
 	}
