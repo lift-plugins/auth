@@ -57,7 +57,7 @@ func (t *JSONWebToken) Expired() bool {
 		return false
 	}
 
-	return expiry.Add(-leeway).Before(time.Now())
+	return time.Now().After(expiry.Add(-leeway))
 }
 
 // Verify checks token signature and returns its payload and signature header.
