@@ -35,7 +35,7 @@ Commands:
 Options:
   -p --provider=ADDRESS:PORT              The identity provider address. [default: id.hooklift.io:443]
   -h --help                               Shows this screen.
-  --version                               Shows version of this plugin.
+  -v --version                            Shows version of this plugin.
 `
 
 func main() {
