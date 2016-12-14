@@ -203,7 +203,11 @@ func (tks *Tokens) RefreshToken() error {
 		return err
 	}
 
-	tks = newTokens
+	tks.Access = newTokens.Access
+	tks.Refresh = newTokens.Refresh
+	tks.ID = newTokens.ID
+	tks.Issuer = newTokens.Issuer
+
 	return nil
 }
 

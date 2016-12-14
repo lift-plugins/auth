@@ -15,7 +15,7 @@ var (
 )
 
 const usage = `
-Hooklift Identity CLI.
+Manages identity and authorization against Hooklift's Identity system.
 
 Usage:
   auth login [--provider=ADDRESS:PORT]
@@ -124,6 +124,8 @@ func tokens(args map[string]interface{}) {
 		ui.Fatal("No tokens found. Please sign in first.")
 	}
 
-	ui.Info("ID Token: %s\n\n", idToken)
-	ui.Info("Access Token: %s\n", accessToken)
+	ui.Title("ID Token\n")
+	ui.Info("%s\n", idToken)
+	ui.Title("Access Token\n")
+	ui.Info("%s\n", accessToken)
 }
