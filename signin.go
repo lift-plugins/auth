@@ -45,14 +45,16 @@ func SignIn(email, password, address string) error {
 	req := &api.SignInRequest{
 		Username:     email,
 		Password:     password,
-		Scope:        []string{"openid", "name", "email", "offline_access", "global"},
+		Scope:        []string{"openid", "name", "email", "offline_access", "admin"},
 		ResponseType: []string{"token", "id_token"},
 		Audience: []string{
-			// To be able to publish and unpublish plugins from the registry.
+			// To be able to publish and unpublish Lift plugins from Lift registry.
 			"https://lift.hooklift.io",
 			// To be able to interact with Hooklift's Platform API to deploy apps,
 			// tail logs, manage apps configurations, etc.
 			"https://api.hooklift.io",
+			// To be able to interactively deploy using Lift CLI
+			"https://git.hooklift.io",
 		},
 		State: csrfToken,
 		Nonce: nonce,
