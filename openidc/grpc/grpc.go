@@ -16,7 +16,8 @@ import (
 // compilation. See grpc_dev.go
 var tlsCert = ""
 
-// Connection returns a server connection to the OpenIDConnect Provider.
+// Connection returns a server connection to Hooklift gRPC service, handling token
+// authentication and refreshing.
 func Connection(address, userAgent string, creds ...string) (*grpc.ClientConn, error) {
 	// go-grpc fails if address has a scheme
 	if strings.HasPrefix(address, "http") {
@@ -64,7 +65,7 @@ func Connection(address, userAgent string, creds ...string) (*grpc.ClientConn, e
 			basicCreds = BasicCreds(creds[0], creds[1])
 		}
 	} else {
-		// We need to use client credentials when calling the sign-in service in the server as per the OpenID Connect spec.
+		// Uses client credentials when calling the sign-in service as per the OpenID Connect spec.
 		basicCreds = BasicCreds(client.ClientId, client.ClientSecret)
 	}
 
