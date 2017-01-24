@@ -5,14 +5,16 @@ import (
 
 	api "github.com/hooklift/apis/go/identity"
 	"github.com/hooklift/lift/ui"
-	"github.com/lift-plugins/auth/openidc/grpc"
+	"github.com/lift-plugins/auth/openidc/clients"
+	"github.com/lift-plugins/auth/openidc/grpcutil"
 	"github.com/lift-plugins/auth/openidc/tokens"
 	"github.com/pkg/errors"
 )
 
 // SignOut removes locally stored tokens and does best effort to revoke tokens from
-// the OpenID Provider.
-func SignOut(address string) error {
+// the OpenID Provider. Any error attempting to sign out from the identity server is silently ignored but
+// can be seen if running plugin with DEBUG enabled.
+func SignOut() error {
 	defer tokens.Delete()
 
 	tks := new(tokens.Tokens)
@@ -21,7 +23,13 @@ func SignOut(address string) error {
 		return nil
 	}
 
-	serverConn, err := grpc.Connection(tks.Issuer, "lift-auth")
+	client := new(clients.Client)
+	if err := client.Read(); err != nil {
+		ui.Debug("%+v", err)
+		return nil
+	}
+
+	serverConn, err := grpcutil.Connection(tks.Issuer, "lift-auth", client.ClientId, client.ClientSecret)
 	if err != nil {
 		// We were unable to revoke tokens in the server, so we just return
 		// and let them expire.
@@ -30,13 +38,11 @@ func SignOut(address string) error {
 	}
 	defer serverConn.Close()
 
-	client := api.NewAuthzClient(serverConn)
+	authzClient := api.NewAuthzClient(serverConn)
 	ctx := context.Background()
 
-	if _, err := client.SignOut(ctx, &api.SignOutRequest{
-		ClientId:     "",
-		ClientSecret: "",
-		IdToken:      tks.ID,
+	if _, err := authzClient.SignOut(ctx, &api.SignOutRequest{
+		IdToken: tks.ID,
 	}); err != nil {
 		ui.Debug("%+v", errors.Wrap(err, "failed signing user out from identity server"))
 	}

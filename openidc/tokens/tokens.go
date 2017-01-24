@@ -16,7 +16,6 @@ import (
 	jose "gopkg.in/square/go-jose.v2"
 
 	"github.com/hooklift/lift/config"
-	"github.com/lift-plugins/auth/openidc/clients"
 	"github.com/lift-plugins/auth/openidc/discovery"
 	"github.com/lift-plugins/auth/openidc/oauth2"
 	"github.com/pkg/errors"
@@ -80,7 +79,7 @@ func (tks *Tokens) Verify(clientID, nonce string) error {
 	}
 
 	if idToken.Issuer != tks.Issuer {
-		return errors.New("issuer in ID token does not match the identity provider originally used")
+		return fmt.Errorf("issuer in ID token does not match the identity provider originally used: %s != %s", idToken.Issuer, tks.Issuer)
 	}
 
 	if idToken.AuthorizedParty != "" && idToken.AuthorizedParty != clientID {
@@ -114,7 +113,7 @@ type refreshTokenResponse struct {
 }
 
 // RefreshToken refreshes ID, Access and Refresh tokens using current refresh token. Only if any of the tokens expired.
-func (tks *Tokens) RefreshToken() error {
+func (tks *Tokens) RefreshToken(clientID, clientSecret string) error {
 	if tks.Access == "" {
 		return errors.New("there is no access token to refresh")
 	}
@@ -155,12 +154,7 @@ func (tks *Tokens) RefreshToken() error {
 		return errors.Wrapf(err, "failed preparing HTTP request")
 	}
 
-	client := new(clients.Client)
-	if err := client.Read(); err != nil {
-		return err
-	}
-
-	req.SetBasicAuth(client.ClientId, client.ClientSecret)
+	req.SetBasicAuth(clientID, clientSecret)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := oauth2.Client.Do(req)
@@ -195,7 +189,7 @@ func (tks *Tokens) RefreshToken() error {
 	newTokens.Refresh = refreshRes.RefreshToken
 	newTokens.Issuer = config.Issuer
 
-	if err := newTokens.Verify(client.ClientId, nonce); err != nil {
+	if err := newTokens.Verify(clientID, nonce); err != nil {
 		return err
 	}
 

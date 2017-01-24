@@ -11,9 +11,9 @@ import (
 
 	api "github.com/hooklift/apis/go/identity"
 	"github.com/hooklift/lift/ui"
-	"github.com/lift-plugins/auth/openidc/clients"
+	"github.com/lift-plugins/auth/openidc"
 	"github.com/lift-plugins/auth/openidc/discovery"
-	apigrpc "github.com/lift-plugins/auth/openidc/grpc"
+	"github.com/lift-plugins/auth/openidc/grpcutil"
 	"github.com/lift-plugins/auth/openidc/tokens"
 )
 
@@ -21,13 +21,7 @@ import (
 func SignIn(email, password, address string) error {
 	ctx := context.Background()
 
-	grpcConn, err := apigrpc.Connection(address, "lift-auth", email, password)
-	if err != nil {
-		return errors.Wrap(err, "failed connecting to openid provider.")
-	}
-	defer grpcConn.Close()
-
-	client, err := clients.Register(ctx, grpcConn, email)
+	client, err := openidc.RegisterClient(ctx, address, email, password)
 	if err != nil {
 		return err
 	}
@@ -60,6 +54,12 @@ func SignIn(email, password, address string) error {
 		Nonce: nonce,
 	}
 
+	grpcConn, err := grpcutil.Connection(address, "lift-auth", client.ClientId, client.ClientSecret)
+	if err != nil {
+		return errors.Wrap(err, "failed connecting to openid provider.")
+	}
+	defer grpcConn.Close()
+
 	authz := api.NewAuthzClient(grpcConn)
 	resp, err := authz.SignIn(ctx, req)
 	if err != nil {
@@ -69,11 +69,11 @@ func SignIn(email, password, address string) error {
 		}
 
 		ui.Debug("%+v", errors.Wrap(err, "failed signing user in"))
-		return errors.New("We failed signing you in. Please try again.")
+		return errors.New("We failed signing you in. Please try again")
 	}
 
 	if resp.State != csrfToken {
-		return errors.New("CSRF token received does not match value sent.")
+		return errors.New("CSRF token received does not match value sent")
 	}
 
 	// Discovers OpenID Connect configuration for the given provider address and refreshes cached

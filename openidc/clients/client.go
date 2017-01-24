@@ -6,59 +6,24 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pkg/errors"
-	"golang.org/x/net/context"
-	"google.golang.org/grpc"
-
+	"github.com/golang/protobuf/ptypes"
 	api "github.com/hooklift/apis/go/identity"
 	"github.com/hooklift/lift/config"
+	"github.com/pkg/errors"
 )
 
 var clientPath = filepath.Join(config.WorkDir, "client.json")
 
-// Register creates a lift CLI client for the current logged user.
-func Register(ctx context.Context, serverConn *grpc.ClientConn, username string) (*Client, error) {
-	clientService := api.NewAppsClient(serverConn)
-
-	req := &api.RegisterApp{
-		ClientName:      "Lift CLI",
-		ClientUri:       "https://www.hooklift.io/lift?user=" + username,
-		ApplicationType: "native",
-		RedirectUris:    []string{"http://localhost:9999/callback"},
-		ResponseTypes:   []string{"token", "id_token"},
-		GrantTypes:      []string{"password", "refresh_token"},
-		LogoUri:         "https://avatars1.githubusercontent.com/u/22415297?v=3&s=200",
-		Contacts:        []string{"eng@hooklift.io"},
-		PolicyUri:       "https://www.hooklift.io/policy/privacy",
-		TosUri:          "https://www.hooklift.io/policy/tos",
-		IdTokenSignedResponseAlg: "ES256",
-	}
-
-	clientApp := new(Client)
-	if err := clientApp.Read(); err == nil {
-		return clientApp, nil
-	}
-
-	res, err := clientService.Register(ctx, req)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed registering openidc client for Lift")
-	}
-
-	clientApp.RegisterApp = *res
-	if err := clientApp.Write(); err != nil {
-		return nil, err
-	}
-
-	return clientApp, nil
-}
-
 // Client represents the OpenID Connect application used by Lift.
 type Client struct {
 	api.RegisterApp
+	CreatedAt string `json:"created_at"`
 }
 
 // Write persist client data to disk.
 func (c *Client) Write() error {
+	c.CreatedAt = ptypes.TimestampString(c.ClientIdIssuedAt)
+
 	data, err := json.MarshalIndent(c, "", "\t")
 	if err != nil {
 		return errors.Wrap(err, "failed marshaling client data")
