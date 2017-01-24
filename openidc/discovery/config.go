@@ -4,12 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
-
-	"io/ioutil"
-
 	"strings"
 
 	"github.com/hooklift/lift/config"
