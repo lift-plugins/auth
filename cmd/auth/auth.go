@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	docopt "github.com/docopt/docopt-go"
 
@@ -33,7 +35,7 @@ Commands:
   tokens                                   Shows ID and Access tokens.
 
 Options:
-  -p --provider=ADDRESS:PORT              The identity provider address. [default: id.hooklift.io:443]
+  -p --provider=ADDRESS:PORT              The identity provider address. [default: https://id.hooklift.io:443]
   -h --help                               Shows this screen.
   -v --version                            Shows version of this plugin.
 `
@@ -80,6 +82,11 @@ func main() {
 // signIn authenticates the user and returns the received identity token.
 func signIn(args map[string]interface{}) {
 	address := args["--provider"].(string)
+
+	if !strings.HasPrefix(address, "http") {
+		address = fmt.Sprintf("https://%s", address)
+	}
+
 	ui.Info("Enter credentials for %s\n", address)
 
 	email := ui.Ask("Email: ")
@@ -99,9 +106,7 @@ func signIn(args map[string]interface{}) {
 
 // signOut terminates the user session with the OpenID Provider.
 func signOut(args map[string]interface{}) {
-	address := args["--provider"].(string)
-	auth.SignOut(address)
-
+	auth.SignOut()
 	ui.Info("Signed out successfully.\n")
 }
 
