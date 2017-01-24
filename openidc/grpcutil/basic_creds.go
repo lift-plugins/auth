@@ -1,4 +1,4 @@
-package grpc
+package grpcutil
 
 import (
 	"encoding/base64"
@@ -11,8 +11,8 @@ type basicCreds struct {
 	username, password string
 }
 
-// BasicCreds implements PerRPCCredentials for sending client credentials. This is
-// used when interacting with any of the token services.
+// BasicCreds implements PerRPCCredentials for sending Basic authorization credentials.
+// This is used when interacting with any of the token services as well as to dynamically register OpenIDC Clients.
 func BasicCreds(username, password string) credentials.PerRPCCredentials {
 	return &basicCreds{
 		username: username,

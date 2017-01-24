@@ -1,9 +1,12 @@
 // +build dev
 
-package grpc
+package grpcutil
 
 // tlsCert is the development server self-signed public certificate.
 // It is only compiled when "dev" build tag is used during compilation.
+//
+// c4milo: We cannot use grpc.WithInsecure when dialing because gRPC
+// still requires TLS and fails anyway.
 func init() {
 	tlsCert = `
 -----BEGIN CERTIFICATE-----
